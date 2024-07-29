@@ -8,7 +8,7 @@
         <th colspan="2">Crear nueva Persona</th>
     </tr>
     @include('partials.validation-errors')
-    <form action="{{ route('personas.store') }}" method="post">
+    <form action="{{ route('personas.store') }}" method="post" enctype="multipart/form-data">
         @include('partials.form',['btnText' => 'Guardar'])
     </form>
 </table>

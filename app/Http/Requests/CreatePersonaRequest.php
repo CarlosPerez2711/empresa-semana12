@@ -31,7 +31,10 @@ class CreatePersonaRequest extends FormRequest
             'cPerSexo' => 'nullable|string|max:50',
             'nPerSueldo' => 'required|numeric|min:0',
             'cPerRnd' => 'required|string|max:50',
-            'nPerEstado' => 'required|string|size:1'
+            'nPerEstado' => 'required|string|size:1',
+            'image' => [
+            $this->route('servicio') ? 'nullable' : 'required', 
+            'mimes:jpeg,png',]
 
         ];
     }
@@ -52,7 +55,8 @@ class CreatePersonaRequest extends FormRequest
             'cPerRnd.required' => 'El campo RND es obligatorio.',
             'nPerEstado.required' => 'El estado es obligatorio.',
             'nPerEstado.string' => 'Es requisito una cadena de texto en el estado.',
-            'nPerEstado.size' => 'Se requiere un solo  carácter el estado.'
+            'nPerEstado.size' => 'Se requiere un solo  carácter el estado.',
+            'imagen.required' => 'Debes seleccionar una imagen',
         ];
     }
 

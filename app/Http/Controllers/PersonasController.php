@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Persona;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\CreatePersonaRequest;
+
 class PersonasController extends Controller
 {
     /**
@@ -12,9 +14,8 @@ class PersonasController extends Controller
      */
     public function index()
     {
-        $personas = Persona::orderBy('nPerCodigo','asc')->paginate(3);
-        return view('personas',compact('personas'));
-
+        $personas = Persona::orderBy('nPerCodigo', 'asc')->paginate(3);
+        return view('personas', compact('personas'));
     }
 
     /**
@@ -22,10 +23,9 @@ class PersonasController extends Controller
      */
     public function create()
     {
-        return view('create',[
-            'persona'=>new Persona
+        return view('create', [
+            'persona' => new Persona
         ]);
-        //
     }
 
     /**
@@ -33,10 +33,14 @@ class PersonasController extends Controller
      */
     public function store(CreatePersonaRequest $request)
     {
-        Persona::create($request->validated());
-        return redirect()->route('personas.index')->with('estado','La persona fue creada correctamente');
-     
+        $persona = new Persona($request->validated());
 
+        if ($request->hasFile('image')) {
+            $persona->image = $request->file('image')->store('images');
+        }
+
+        $persona->save();
+        return redirect()->route('personas.index')->with('estado', 'La persona fue creada correctamente');
     }
 
     /**
@@ -54,10 +58,9 @@ class PersonasController extends Controller
      */
     public function edit(Persona $persona)
     {
-        return view('editar',[
-            'persona'=>$persona
+        return view('editar', [
+            'persona' => $persona
         ]);
-        //
     }
 
     /**
@@ -65,24 +68,42 @@ class PersonasController extends Controller
      */
     public function update(Persona $persona, CreatePersonaRequest $request)
     {
-        $persona->update($request->validated());
-        return redirect()->route('personas.show', $persona)->with('estado','La persona fue actualizada correctamente');
+        if ($request->hasFile('image')) {
+            // Elimina la imagen antigua si existe
+            if ($persona->image) {
+                Storage::delete($persona->image);
+            }
 
+            // Actualiza la información de la persona
+            $persona->fill($request->validated());
+            $persona->image = $request->file('image')->store('images');
+        } else {
+            // Actualiza sin cambiar la imagen
+            $persona->update(array_filter($request->validated()));
+        }
+
+        $persona->save();
+        return redirect()->route('personas.show', $persona)->with('estado', 'La persona fue actualizada correctamente');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Persona $nPerCodigo)
+    public function destroy(Persona $persona)
     {
-        $nPerCodigo->delete();
-        return redirect()->route('personas.index')->with('estado','La persona fue eliminada correctamente');
+        // Elimina la imagen asociada si existe
+        if ($persona->image) {
+            Storage::delete($persona->image);
+        }
+
+        $persona->delete();
+
+        return redirect()->route('personas.index')->with('estado', 'La persona fue eliminada correctamente');
     }
     
-    public function __construct(){
-        // $this->middleware('auth')->only('create','edit');
-        $this->middleware('auth')->except('index','show');
-
+    public function __construct()
+    {
+        $this->middleware('auth')->except('index', 'show');
     }
-   
 }
+
